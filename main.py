@@ -2,6 +2,12 @@ import socket
 from subprocess import DEVNULL, STDOUT, check_output, CalledProcessError, Popen, PIPE
 from time import sleep
 from utils import send_talent_mail
+import sys
+
+password_gmail = sys.argv[1]
+if not password_gmail:
+    print("Password gmail is empty!")
+    exit(10)
 
 WAITING = 5 
 HOSTNAME_DNS = "8.8.8.8"
@@ -44,4 +50,5 @@ while True:
             print(OKGREEN + "Success : " + ip + ": " + name_host + ENDC)
         else:
             print(FAIL + "Fail : " + ip + ": " + name_host + ENDC)
+            send_talent_mail(f"{name_host} is down!", password_gmail, "tommydzepina@gmail.com")
     file.close()
