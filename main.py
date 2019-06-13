@@ -4,9 +4,11 @@ from time import sleep
 from utils import send_talent_mail
 import sys
 
-# devo dirgli che una volta trovato gli indirizzi ip che non esistono di mandare una volta solo la notifica
-# e di aspettare prima di essere rimandata un tot di tempo
-password_gmail = sys.argv[1]
+if len(sys.argv) < 2:
+    print("No password found")
+    exit(1)
+
+password_gmail = sys.argv[1].strip()
 if not password_gmail:
     print("Password gmail is empty!")
     exit(10)
@@ -63,8 +65,9 @@ while True:
         else:
             container.append(index)
             print(FAIL + "Fail : " + ip + ": " + name_host + ENDC)
-            send_talent_mail(f"{name_host} is down!", password_gmail, "tommydzepina@gmail.com")
-
+            res = send_talent_mail(f"{name_host} is down!", password_gmail, "tommydzepina@gmail.com")
+            if not res:
+                print(WARNING + "Mail failed" + ENDC)
     file.close()
 
 
