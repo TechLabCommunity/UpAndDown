@@ -5,6 +5,7 @@ from time import sleep
 WAITING = 10
 HOSTNAME_DNS = "8.8.8.8"
 HOSTNAME_DNS_PORT = 80
+FILE_ADDRESSES = "ip_addresses"
 
 HEADER = '\033[95m'
 OKBLUE = '\033[94m'
@@ -30,7 +31,7 @@ s.close()
 
 while True:
     print(HEADER + "Starting scan all ips..." + ENDC)
-    file = open("ip_addresses", "r")  # read the files with the name of host
+    file = open(FILE_ADDRESSES, "r")  # read the files with the name of host
     sleep(WAITING)  # waiting some seconds.
     for line in file:
         ip = line.strip()  # delete "\n" and other some shits in the strings
