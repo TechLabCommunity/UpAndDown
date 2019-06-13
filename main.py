@@ -2,57 +2,45 @@ import socket
 from subprocess import DEVNULL, STDOUT, check_output, CalledProcessError, Popen, PIPE
 from time import sleep
 
-
-START_INDEX = 18
-STOP_INDEX = 27
+WAITING = 5
 HOSTNAME_DNS = "8.8.8.8"
 HOSTNAME_DNS_PORT = 80
+FILE_ADDRESSES = "ip_addresses"
+
+HEADER = '\033[95m'
+OKBLUE = '\033[94m'
+OKGREEN = '\033[92m'
+WARNING = '\033[93m'
+FAIL = '\033[91m'
+ENDC = '\033[0m'
+BOLD = '\033[1m'
+UNDERLINE = '\033[4m'
+
+
+def is_pingable(ip_address: str):
+    process = Popen(["ping", "-c", "1", ip_address], stdout=PIPE, stderr=DEVNULL)
+    return_code = process.wait()
+    return return_code == 0
+
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.connect((HOSTNAME_DNS, HOSTNAME_DNS_PORT))
-ip = s.getsockname()[0]
-print("current host: " + str(ip))
-
-all_occ = [i for i, letter in enumerate(ip) if letter == "."]
-last_occ = all_occ[-1]
-ip_castrato = ip[:last_occ + 1]
-counter = 0
-counter_1 = 0
-final_list = []
+my_ip = s.getsockname()[0]
+print("current host: " + str(my_ip))
+s.close()
 
 while True:
-    print("Starting scan all ips...")
-    sleep(5)  # waiting some seconds.
-    for i in range(START_INDEX, STOP_INDEX):
-        # ping attraversso il sistema
-        process = Popen(["ping", "-c", "1", ip_castrato + str(i)], stdout=PIPE)
-        return_code = process.wait()
-        if return_code == 0:
-            counter += 1
-            try:
-                name_host = socket.gethostbyaddr(ip_castrato + str(i))
-            except socket.herror:
-                name_host = "HOST non riconosciuto"
-            list_host = list(name_host)
-
-            # elimino le parentesi quadre che sono in mezzo
-            if type(list_host) is list and [] in list_host:
-                list_host.remove([])
-                final_list.append(str(list_host)[1:-1])
-                if return_code == 0:
-                    print(str(list_host)[1:-1] + " is up!")
-
-        # indirizzi ip liberi
+    print(HEADER + "Starting scan all ips..." + ENDC)
+    file = open(FILE_ADDRESSES, "r")  # read the files with the name of host
+    sleep(WAITING)  # waiting some seconds.
+    for line in file:
+        ip = line.strip()  # delete "\n" and other some shits in the strings
+        try:
+            name_host = socket.gethostbyname(ip)
+        except socket.gaierror:  # If you can't ping, hostname won't exist...
+            name_host = "UNKNOWN"
+        if is_pingable(ip):
+            print(OKGREEN + "Success : " + ip + ": " + name_host + ENDC)
         else:
-            counter_1 += 1
-            print(ip_castrato + str(i), " is down!")
-
-    # non serve mettere queste istruzioni dentro il ciclo for, bastano fuori...
-    # qunatita di host attivi e indirizzi ip liberi
-    print("\nNot active hosts: " + str(counter_1))
-    print("Active hosts: " + str(counter))
-
-    # host ordinati per colonne
-    for item in final_list:
-        print(str("\n" + item) + "\n")
-
+            print(FAIL + "Fail : " + ip + ": " + name_host + ENDC)
+    file.close()
