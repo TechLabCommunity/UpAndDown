@@ -2,7 +2,7 @@ import socket
 from subprocess import DEVNULL, STDOUT, check_output, CalledProcessError, Popen, PIPE
 from time import sleep
 
-WAITING = 100
+WAITING = 1000
 HOSTNAME_DNS = "8.8.8.8"
 HOSTNAME_DNS_PORT = 80
 FILE_ADDRESSES = "ip_addresses"
