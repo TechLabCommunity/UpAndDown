@@ -4,12 +4,15 @@ from time import sleep
 from utils import send_talent_mail
 import sys
 
+# devo dirgli che una volta trovato gli indirizzi ip che non esistono di mandare una volta solo la notifica
+# e di aspettare prima di essere rimandata un tot di tempo
 password_gmail = sys.argv[1]
 if not password_gmail:
     print("Password gmail is empty!")
     exit(10)
 
-WAITING = 5 
+WAITING = 5
+TIMER = 10
 HOSTNAME_DNS = "8.8.8.8"
 HOSTNAME_DNS_PORT = 80
 FILE_ADDRESSES = "ip_addresses"
@@ -36,19 +39,32 @@ my_ip = s.getsockname()[0]
 print("current host: " + str(my_ip))
 s.close()
 
+counter = 0
+container = []
 while True:
     print(HEADER + "Starting scan all ips..." + ENDC)
-    file = open(FILE_ADDRESSES, "r")  # read the files with the name of host
+    file = open(FILE_ADDRESSES, "r+")  # read the files with the name of host
+    lines = file.readlines()
     sleep(WAITING)  # waiting some seconds.
-    for line in file:
-        ip = line.strip()  # delete "\n" and other some shits in the strings
+    counter += 1
+    if counter == TIMER:  # find again the UNKNOWN HOST after TIMER = 10
+        del container[:]
+
+    for index, host in enumerate(lines):
+        ip = host.strip()  # delete "\n" and other some shits in the strings
         try:
             name_host = socket.gethostbyname(ip)
         except socket.gaierror:  # If you can't ping, hostname won't exist...
             name_host = "UNKNOWN"
         if is_pingable(ip):
             print(OKGREEN + "Success : " + ip + ": " + name_host + ENDC)
+        elif index in container:  # don't do the else condition
+            pass
         else:
+            container.append(index)
             print(FAIL + "Fail : " + ip + ": " + name_host + ENDC)
             send_talent_mail(f"{name_host} is down!", password_gmail, "tommydzepina@gmail.com")
+
     file.close()
+
+
