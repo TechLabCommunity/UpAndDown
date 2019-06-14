@@ -14,7 +14,7 @@ if not password_gmail:
     exit(10)
 
 WAITING = 5
-TIMER = 10
+TIMER = 3
 HOSTNAME_DNS = "8.8.8.8"
 HOSTNAME_DNS_PORT = 80
 FILE_ADDRESSES = "ip_addresses"
@@ -42,16 +42,12 @@ print("current host: " + str(my_ip))
 s.close()
 
 counter = 0
-container = []
 while True:
     print(HEADER + "Starting scan all ips..." + ENDC)
     file = open(FILE_ADDRESSES, "r+")  # read the files with the name of host
     lines = file.readlines()
     sleep(WAITING)  # waiting some seconds.
-    counter += 1
-    if counter == TIMER:  # find again the UNKNOWN HOST after TIMER = 10
-        del container[:]
-
+    counter += 1  # count the down hosts in every loop
     for index, host in enumerate(lines):
         ip = host.strip()  # delete "\n" and other some shits in the strings
         try:
@@ -60,14 +56,16 @@ while True:
             name_host = "UNKNOWN"
         if is_pingable(ip):
             print(OKGREEN + "Success : " + ip + ": " + name_host + ENDC)
-        elif index in container:  # don't do the else condition
-            pass
         else:
-            container.append(index)
-            print(FAIL + "Fail : " + ip + ": " + name_host + ENDC)
-            res = send_talent_mail(f"{name_host} is down!", password_gmail, "tommydzepina@gmail.com")
-            if not res:
-                print(WARNING + "Mail failed" + ENDC)
+            down_host = {str(host): counter}  # dictionary that count the down hosts
+            if down_host[str(host)] == TIMER:  # TIMER that decides to postpone the down hosts in the next loop
+                counter = 0
+            elif down_host[str(host)] == 1:  # if counter equal to 1 send the messagge
+                print(FAIL + "Fail : " + ip + ": " + name_host + ENDC)
+                res = send_talent_mail(f"{name_host} is down!", password_gmail, "tommydzepina@gmail.com")
+                if not res:
+                    print(WARNING + "Mail failed" + ENDC)
+
     file.close()
 
 
