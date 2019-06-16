@@ -14,7 +14,7 @@ if not password_gmail:
     exit(10)
 
 WAITING = 5
-TIMER = 3
+TIMER = 10
 HOSTNAME_DNS = "8.8.8.8"
 HOSTNAME_DNS_PORT = 80
 FILE_ADDRESSES = "ip_addresses"
@@ -40,15 +40,24 @@ s.connect((HOSTNAME_DNS, HOSTNAME_DNS_PORT))
 my_ip = s.getsockname()[0]
 print("current host: " + str(my_ip))
 s.close()
+file = open(FILE_ADDRESSES, "r+")  # read the files with the name of host
+lines = file.readlines()
 
-counter = 0
+down = 0
 while True:
     print(HEADER + "Starting scan all ips..." + ENDC)
-    file = open(FILE_ADDRESSES, "r+")  # read the files with the name of host
-    lines = file.readlines()
-    sleep(WAITING)  # waiting some seconds.
-    counter += 1  # count the down hosts in every loop
-    for index, host in enumerate(lines):
+    sleep(WAITING)  # waiting some seconds
+
+    counter = 0
+    for host in lines:
+        ip = host.strip()
+        if not is_pingable(ip):
+            counter += 1  # how many hosts are down
+            down_host = {str(ip): counter}
+    down += 1  # how many time the the loop is repeated
+    file.close()
+
+    for host in lines:
         ip = host.strip()  # delete "\n" and other some shits in the strings
         try:
             name_host = socket.gethostbyname(ip)
@@ -57,15 +66,13 @@ while True:
         if is_pingable(ip):
             print(OKGREEN + "Success : " + ip + ": " + name_host + ENDC)
         else:
-            down_host = {str(host): counter}  # dictionary that count the down hosts
-            if down_host[str(host)] == TIMER:  # TIMER that decides to postpone the down hosts in the next loop
-                counter = 0
-            elif down_host[str(host)] == 1:  # if counter equal to 1 send the messagge
+            if down == 1:  # only first time print
                 print(FAIL + "Fail : " + ip + ": " + name_host + ENDC)
                 res = send_talent_mail(f"{name_host} is down!", password_gmail, "tommydzepina@gmail.com")
                 if not res:
                     print(WARNING + "Mail failed" + ENDC)
-
+            elif down == TIMER:  # reset the down counter and reopen the while loop with break
+                down = 0
+                break
     file.close()
-
 
