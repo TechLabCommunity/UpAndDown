@@ -1,28 +1,27 @@
 import smtplib
-import sys
+from email.message import EmailMessage
+from datetime import datetime
 
 
 def send_talent_mail(body: str, password: str, destination: str):
     gmail_user = 'alert@talent-lab.it'
     gmail_password = password
+    from_addr = gmail_user
+    to_addr = [destination]
+    now = datetime.now()
+    current_time = now.strftime("%H:%M:%S, %d/%m/%Y")
 
-    sent_from = gmail_user
-    to = [destination]
-    subject = 'Alert da parte di Up and Down'
+    msg = EmailMessage()
+    msg["Subject"] = "Python " + current_time
+    msg["From"] = from_addr
+    msg["To"] = to_addr
+    msg.set_content(body)
 
-    email_text = """\  
-    From: %s  
-    To: %s  
-    Subject: %s
-    
-    %s
-    """ % (sent_from, ", ".join(to), subject, body)
     try:
-        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-        server.ehlo()
-        server.login(gmail_user, gmail_password)
-        server.sendmail(sent_from, to, email_text)
-        server.close()
-        return True
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+            smtp.login(gmail_user, gmail_password)
+            smtp.send_message(msg)
+            smtp.close()
+            return True
     except:
         return False

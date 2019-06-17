@@ -4,6 +4,7 @@ from time import sleep
 from utils import send_talent_mail
 import sys
 
+
 if len(sys.argv) < 2:
     print("No password found")
     exit(1)
@@ -62,17 +63,16 @@ while True:
         try:
             name_host = socket.gethostbyname(ip)
         except socket.gaierror:  # If you can't ping, hostname won't exist...
-            name_host = "UNKNOWN"
+            name_host = host
         if is_pingable(ip):
             print(OKGREEN + "Success : " + ip + ": " + name_host + ENDC)
         else:
             if down == 1:  # only first time print
                 print(FAIL + "Fail : " + ip + ": " + name_host + ENDC)
-                res = send_talent_mail(f"{name_host} is down!", password_gmail, "tommydzepina@gmail.com")
+                res = send_talent_mail(f"{name_host} doesn't respond!", password_gmail, "tommydzepina@gmail.com")
                 if not res:
                     print(WARNING + "Mail failed" + ENDC)
             elif down == TIMER:  # reset the down counter and reopen the while loop with break
                 down = 0
                 break
     file.close()
-
