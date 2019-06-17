@@ -23,5 +23,9 @@ def send_talent_mail(body: str, password: str, destination: str):
             smtp.send_message(msg)
             smtp.close()
             return True
-    except:
-        return False
+    except smtplib.SMTPAuthenticationError:
+        print("Authentication Error. Username and password could be wrong.")
+    except smtplib.SMTPHeloError:
+        print("HELLO message failed.")
+    return False
+
