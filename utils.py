@@ -29,3 +29,18 @@ def send_talent_mail(body: str, password: str, destination: str):
         print("HELLO message failed.")
     return False
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

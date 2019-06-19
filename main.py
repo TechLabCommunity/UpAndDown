@@ -3,6 +3,8 @@ from subprocess import DEVNULL, STDOUT, check_output, CalledProcessError, Popen,
 from time import sleep
 from utils import send_talent_mail
 import sys
+import os
+
 
 
 if len(sys.argv) < 2:
@@ -34,6 +36,16 @@ def is_pingable(ip_address: str):
     process = Popen(["ping", "-c", "1", ip_address], stdout=PIPE, stderr=DEVNULL)
     return_code = process.wait()
     return return_code == 0
+
+
+def get_status(domain: str):  # codice nuovo
+    command = "whois " + domain
+    process = os.popen(command)
+    results = str(process.read())
+    marker = results.find("Status: ")
+    line = results[marker:].strip()
+    if "AVAILABLE" in line:
+        send_talent_mail(f"{name_host} is AVAILABLE!", password_gmail, "tommydzepina@gmail.com")
 
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -75,4 +87,9 @@ while True:
             elif down == TIMER:  # reset the down counter and reopen the while loop with break
                 down = 0
                 break
+
+            if get_status(ip):
+                print(OKGREEN + ip + " Status: is AVAILABLE.")
+
     file.close()
+
