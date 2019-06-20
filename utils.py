@@ -2,6 +2,10 @@ import smtplib
 from subprocess import DEVNULL, Popen, PIPE
 from email.message import EmailMessage
 from datetime import datetime
+import socket
+
+HOSTNAME_DNS = "8.8.8.8"
+HOSTNAME_DNS_PORT = 80
 
 HEADER = '\033[95m'
 OKBLUE = '\033[94m'
@@ -27,6 +31,21 @@ def get_status(domain: str):  # codice nuovo
     marker = results.find("Status: ")
     line = results[marker:].strip()
     return "AVAILABLE" in line
+
+
+def local_host(local_host_ip: str):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect((HOSTNAME_DNS, HOSTNAME_DNS_PORT))
+    ip = s.getsockname()[0]
+    s.close()
+
+    all_occ = [i for i, letter in enumerate(ip) if letter == "."]
+    last_occ = all_occ[-1]
+    ip_castrato = ip[:last_occ + 1]
+    if ip_castrato != local_host_ip[:12]:
+        pass
+    elif ip_castrato == local_host_ip[:12]:
+        return True
 
 
 def send_talent_mail(body: str, password: str, destination: str):

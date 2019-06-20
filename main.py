@@ -5,6 +5,7 @@ from time import sleep
 import utils
 from utils import get_status, is_pingable
 from utils import send_talent_mail
+from utils import local_host
 
 try:
     try_whois = Popen(["whois"], stdout=PIPE, stderr=DEVNULL)
@@ -56,8 +57,17 @@ while True:
             name_host = socket.gethostbyname(ip)
         except socket.gaierror:  # If you can't ping, hostname won't exist...
             name_host = host
-        if is_pingable(ip):
+
+            #  if there is a local host but it's not pingable send the msg
+        if local_host(name_host) and not is_pingable(ip):
+            send_talent_mail(f"Local host {name_host} is not pingable!", password_gmail, "tommydzepina@gmail.com")
+            #  elif the host is local and it's pingable send the msg
+        elif local_host(name_host) and is_pingable(ip):
+            send_talent_mail(f"Local host {name_host} is pingable!", password_gmail, "tommydzepina@gmail.com")
+            #  elif the host is not local and it's pingable send the msg
+        elif is_pingable(ip):
             print(utils.OKGREEN + "Success : " + ip + ": " + name_host + utils.ENDC)
+            # else, if the host is not local and the public domain is unknown send the msg
         else:
             if down == 1:  # only first time print
                 print(utils.FAIL + "Fail : " + ip + ": " + name_host + utils.ENDC)
