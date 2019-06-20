@@ -1,9 +1,16 @@
 import socket
-from subprocess import DEVNULL, STDOUT, check_output, CalledProcessError, Popen, PIPE
-from time import sleep
-from utils import send_talent_mail
 import sys
-import os
+from subprocess import DEVNULL, Popen, PIPE
+from time import sleep
+
+from utils import send_talent_mail
+
+try:
+    try_whois = Popen(["whois"], stdout=PIPE, stderr=DEVNULL)
+    print("WHOIS command was found!")
+except FileNotFoundError:
+    print("WHOIS command was not found. You need to install whois command on your distro")
+    exit(2)
 
 
 
@@ -38,14 +45,14 @@ def is_pingable(ip_address: str):
     return return_code == 0
 
 
+# function return true if status ok.
 def get_status(domain: str):  # codice nuovo
-    command = "whois " + domain
-    process = os.popen(command)
-    results = str(process.read())
+    process = Popen(["whois", domain], stdout=PIPE, stderr=DEVNULL)
+    results, _ = process.communicate()
+    results = results.decode("utf-8")  # perchè devo convertire lista di byte in stringa con una certa codifica...
     marker = results.find("Status: ")
     line = results[marker:].strip()
-    if "AVAILABLE" in line:
-        send_talent_mail(f"{name_host} is AVAILABLE!", password_gmail, "tommydzepina@gmail.com")
+    return "AVAILABLE" in line
 
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -89,6 +96,7 @@ while True:
                 break
 
             if get_status(ip):
+                send_talent_mail(f"{name_host} is AVAILABLE!", password_gmail, "tommydzepina@gmail.com")
                 print(OKGREEN + ip + " Status: is AVAILABLE.")
 
     file.close()
