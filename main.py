@@ -6,7 +6,7 @@ import utils
 from utils import get_status, is_pingable
 from utils import send_talent_mail
 from utils import local_host
-
+ 
 print(sys.argv)
 
 try:
