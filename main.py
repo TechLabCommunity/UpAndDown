@@ -91,6 +91,6 @@ while True:
                 break
 
             if get_status(ip):
-                send_talent_mail(f"{name_host} is AVAILABLE!", password_gmail, "tommydzepina@gmail.com")
+                send_talent_mail(f"{name_host} is AVAILABLE!", "", "tommydzepina@gmail.com")
                 print(utils.OKGREEN + ip + " Status: is AVAILABLE.")
 
