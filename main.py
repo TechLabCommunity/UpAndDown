@@ -7,6 +7,8 @@ from utils import get_status, is_pingable
 from utils import send_talent_mail
 from utils import local_host
 
+print(sys.argv)
+
 try:
     try_whois = Popen(["whois"], stdout=PIPE, stderr=DEVNULL)
     print("WHOIS command was found!")
@@ -14,14 +16,24 @@ except FileNotFoundError:
     print("WHOIS command was not found. You need to install whois command on your distro")
     exit(2)
 
-if len(sys.argv) < 2:
-    print("No password found")
-    exit(1)
 
-password_gmail = sys.argv[1].strip()
-if not password_gmail:
-    print("Password gmail is empty!")
-    exit(10)
+if len(sys.argv) < 2:
+    print("Need more arguments")
+    exit(1)
+elif len(sys.argv) == 3:
+    if sys.argv[1] != "-f":
+        print("il primo argumento non è -f quindi devi metterlo.")
+        exit(11)
+    else:
+        file_da_aprire = sys.argv[2]
+        print("qua devi mettere il codice che hai fatto")
+        exit(0)
+elif len(sys.argv) == 1:
+    indirizzo_da_scandire = sys.argv[1]
+    print("scansiona questo indirizzo...")
+else:
+    print("Too many arguments")
+    exit(99)
 
 WAITING = 5
 TIMER = 10
@@ -34,8 +46,9 @@ s.connect((HOSTNAME_DNS, HOSTNAME_DNS_PORT))
 my_ip = s.getsockname()[0]
 print("current host: " + str(my_ip))
 s.close()
-file = open(FILE_ADDRESSES, "r+")  # read the files with the name of host
+file = open(FILE_ADDRESSES, "r")  # read the files with the name of host
 lines = file.readlines()
+file.close()
 
 down = 0
 while True:
@@ -49,7 +62,6 @@ while True:
             counter += 1  # how many hosts are down
             down_host = {str(ip): counter}
     down += 1  # how many time the the loop is repeated
-    file.close()
 
     for host in lines:
         ip = host.strip()  # delete "\n" and other some shits in the strings
@@ -58,12 +70,12 @@ while True:
         except socket.gaierror:  # If you can't ping, hostname won't exist...
             name_host = host
 
+        if local_host(name_host):
+            if is_pingable(ip):
+                send_talent_mail(f"Local host {name_host} is pingable!", password_gmail, "tommydzepina@gmail.com")
+            else:
+                send_talent_mail(f"Local host {name_host} is not pingable!", password_gmail, "tommydzepina@gmail.com")
             #  if there is a local host but it's not pingable send the msg
-        if local_host(name_host) and not is_pingable(ip):
-            send_talent_mail(f"Local host {name_host} is not pingable!", password_gmail, "tommydzepina@gmail.com")
-            #  elif the host is local and it's pingable send the msg
-        elif local_host(name_host) and is_pingable(ip):
-            send_talent_mail(f"Local host {name_host} is pingable!", password_gmail, "tommydzepina@gmail.com")
             #  elif the host is not local and it's pingable send the msg
         elif is_pingable(ip):
             print(utils.OKGREEN + "Success : " + ip + ": " + name_host + utils.ENDC)
@@ -81,6 +93,4 @@ while True:
             if get_status(ip):
                 send_talent_mail(f"{name_host} is AVAILABLE!", password_gmail, "tommydzepina@gmail.com")
                 print(utils.OKGREEN + ip + " Status: is AVAILABLE.")
-
-    file.close()
 

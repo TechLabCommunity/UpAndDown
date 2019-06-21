@@ -29,8 +29,7 @@ def get_status(domain: str):  # codice nuovo
     results, _ = process.communicate()
     results = results.decode("utf-8")  # perchè devo convertire lista di byte in stringa con una certa codifica...
     marker = results.find("Status: ")
-    line = results[marker:].strip()
-    return "AVAILABLE" in line
+    return "AVAILABLE" in results[marker:].strip()
 
 
 def local_host(local_host_ip: str):
@@ -42,10 +41,7 @@ def local_host(local_host_ip: str):
     all_occ = [i for i, letter in enumerate(ip) if letter == "."]
     last_occ = all_occ[-1]
     ip_castrato = ip[:last_occ + 1]
-    if ip_castrato != local_host_ip[:12]:
-        pass
-    elif ip_castrato == local_host_ip[:12]:
-        return True
+    return ip_castrato == local_host_ip[:12]
 
 
 def send_talent_mail(body: str, password: str, destination: str):
