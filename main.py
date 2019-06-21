@@ -6,7 +6,7 @@ import utils
 from utils import get_status, is_pingable
 from utils import send_talent_mail
 from utils import local_host
- 
+
 print(sys.argv)
 
 try:
@@ -72,9 +72,9 @@ while True:
 
         if local_host(name_host):
             if is_pingable(ip):
-                send_talent_mail(f"Local host {name_host} is pingable!", password_gmail, "tommydzepina@gmail.com")
+                send_talent_mail(f"Local host {name_host} is pingable!", "", "tommydzepina@gmail.com")
             else:
-                send_talent_mail(f"Local host {name_host} is not pingable!", password_gmail, "tommydzepina@gmail.com")
+                send_talent_mail(f"Local host {name_host} is not pingable!", "", "tommydzepina@gmail.com")
             #  if there is a local host but it's not pingable send the msg
             #  elif the host is not local and it's pingable send the msg
         elif is_pingable(ip):
@@ -83,7 +83,7 @@ while True:
         else:
             if down == 1:  # only first time print
                 print(utils.FAIL + "Fail : " + ip + ": " + name_host + utils.ENDC)
-                res = send_talent_mail(f"{name_host} doesn't respond!", password_gmail, "tommydzepina@gmail.com")
+                res = send_talent_mail(f"{name_host} doesn't respond!", "", "tommydzepina@gmail.com")
                 if not res:
                     print(utils.WARNING + "Mail failed" + utils.ENDC)
             elif down == TIMER:  # reset the down counter and reopen the while loop with break
