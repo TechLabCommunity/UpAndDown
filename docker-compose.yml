@@ -1,0 +1,9 @@
+version: '3.7'
+
+services:
+    smtp:
+        image: mailhog/mailhog
+        ports:
+            - '18025:8025'
+            - '10025:1025'
+            

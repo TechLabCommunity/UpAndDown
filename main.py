@@ -1,7 +1,7 @@
 import socket
 import sys
 from subprocess import DEVNULL, Popen, PIPE
-from time import sleep
+from time import sleep, strftime, gmtime
 from utils import get_whois_status, is_pingable
 from utils import send_talent_mail
 from utils import is_local_address
@@ -32,14 +32,14 @@ s.close()
 def check_complete_status(hostnames: tuple):
     info("Starting scan all ips...")
     sleep(WAITING)  # waiting some seconds
-
+    mail_body = ""
     for host in hostnames:
+
         host = host.strip()  # delete "\n" and other some shits in the strings
 
         if not is_pingable(host):
             error(f"{host} is not pingable")
-            send_talent_mail(f"{host} is not pingable!", "", "tommydzepina@gmail.com")
-            return
+            mail_body += f"{host} is not pingable!\n"
         if not is_local_address(host):
             try:
                 name_host = socket.gethostbyname(host)
@@ -47,14 +47,17 @@ def check_complete_status(hostnames: tuple):
             except socket.gaierror:  # If you can't ping, hostname won't exist...
                 name_host = host
                 error(f"Name host {name_host} can't be resolved!")
-                send_talent_mail(f"Name host {name_host} can't be resolved!", "", "tommydzepina@gmail.com")
-                return
+                mail_body += f"Name host {name_host} can't be resolved!\n"
                 # else, if the host is not local and the public domain is unknown send the msg
-        elif not get_whois_status(host):
-                send_talent_mail(f"{name_host} is NOT AVAILABLE!", "", "tommydzepina@gmail.com")
-                print(host + " Status: is not AVAILABLE.")
+            if not get_whois_status(host):
+                mail_body += f"{name_host} is NOT AVAILABLE!\n"
+                error(host + " Status: is not AVAILABLE.")
         else:
             info("Name Host : " + host + " with no errors")
+
+    if mail_body:
+        first_part = "Ecco il report del "+strftime("%Y-%m-%d %H:%M:%S", gmtime())+"\n\n"
+        send_talent_mail(first_part+mail_body, "", "tommydzepina@gmail.com")
 
 
 if __name__ == '__main__':

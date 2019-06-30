@@ -1,0 +1,4 @@
+{
+  "HOSTNAME_SMTP" : "localhost",
+  "PORT_SMTP" : 10025
+}

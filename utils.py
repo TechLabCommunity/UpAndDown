@@ -1,3 +1,4 @@
+import json
 import smtplib
 from subprocess import DEVNULL, Popen, PIPE
 from email.message import EmailMessage
@@ -6,6 +7,11 @@ import socket
 
 HOSTNAME_DNS = "8.8.8.8"
 HOSTNAME_DNS_PORT = 80
+
+
+def get_value_config(key: str):
+    json_config = json.load(open("config.json", "r"))
+    return json_config[key]
 
 
 def is_pingable(ip_address: str):
@@ -44,13 +50,15 @@ def send_talent_mail(body: str, password: str, destination: str):
     current_time = now.strftime("%H:%M:%S, %d/%m/%Y")
 
     msg = EmailMessage()
-    msg["Subject"] = "Python " + current_time
+    msg["Subject"] = "Python UpAndDown " + current_time
     msg["From"] = from_addr
     msg["To"] = to_addr
     msg.set_content(body)
 
     try:
-        with smtplib.SMTP("localhost", 1025) as smtp:
+        hostname_smtp = get_value_config("HOSTNAME_SMTP")
+        port_smtp = int(get_value_config("PORT_SMTP"))
+        with smtplib.SMTP(hostname_smtp, port_smtp) as smtp:
             smtp.login(gmail_user, gmail_password)
             smtp.send_message(msg)
             smtp.close()
