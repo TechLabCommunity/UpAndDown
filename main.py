@@ -2,106 +2,78 @@ import socket
 import sys
 from subprocess import DEVNULL, Popen, PIPE
 from time import sleep
-import utils
-from utils import get_status, is_pingable
+from utils import get_whois_status, is_pingable
 from utils import send_talent_mail
-from utils import local_host
+from utils import is_local_address
+from logging import debug, error, info, warning, critical
+import logging
 
-print(sys.argv)
+logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 
 try:
     try_whois = Popen(["whois"], stdout=PIPE, stderr=DEVNULL)
-    print("WHOIS command was found!")
+    info("WHOIS command was found!")
 except FileNotFoundError:
-    print("WHOIS command was not found. You need to install whois command on your distro")
+    critical("WHOIS command was not found. You need to install whois command on your distro")
     exit(2)
 
 
 WAITING = 5
-TIMER = 10
 HOSTNAME_DNS = "8.8.8.8"
 HOSTNAME_DNS_PORT = 80
-FILE_ADDRESSES = "ip_addresses"
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.connect((HOSTNAME_DNS, HOSTNAME_DNS_PORT))
 my_ip = s.getsockname()[0]
-print("current host: " + str(my_ip))
+info("current host: " + str(my_ip))
 s.close()
-file = open(FILE_ADDRESSES, "r")  # read the files with the name of host
-lines = file.readlines()
-file.close()
 
 
-def broadcast():
-    down = 0
-    while True:
-        print(utils.HEADER + "Starting scan all ips..." + utils.ENDC)
-        sleep(WAITING)  # waiting some seconds
+def check_complete_status(hostnames: tuple):
+    info("Starting scan all ips...")
+    sleep(WAITING)  # waiting some seconds
 
-        counter = 0
-        for host in lines:
-            ip = host.strip()
-            if not is_pingable(ip):
-                counter += 1  # how many hosts are down
-                down_host = {str(ip): counter}
-        down += 1  # how many time the the loop is repeated
+    for host in hostnames:
+        host = host.strip()  # delete "\n" and other some shits in the strings
 
-        for host in lines:
-            ip = host.strip()  # delete "\n" and other some shits in the strings
+        if not is_pingable(host):
+            error(f"{host} is not pingable")
+            send_talent_mail(f"{host} is not pingable!", "", "tommydzepina@gmail.com")
+            return
+        if not is_local_address(host):
             try:
-                name_host = socket.gethostbyname(ip)
+                name_host = socket.gethostbyname(host)
+                info("Name Host is : " + host + ": " + name_host)
             except socket.gaierror:  # If you can't ping, hostname won't exist...
                 name_host = host
-
-            if local_host(name_host):
-                if is_pingable(ip):
-                    send_talent_mail(f"Local host {name_host} is pingable!", "", "tommydzepina@gmail.com")
-                else:
-                    send_talent_mail(f"Local host {name_host} is not pingable!", "", "tommydzepina@gmail.com")
-                #  if there is a local host but it's not pingable send the msg
-                #  elif the host is not local and it's pingable send the msg
-            elif is_pingable(ip):
-                print(utils.OKGREEN + "Success : " + ip + ": " + name_host + utils.ENDC)
+                error(f"Name host {name_host} can't be resolved!")
+                send_talent_mail(f"Name host {name_host} can't be resolved!", "", "tommydzepina@gmail.com")
+                return
                 # else, if the host is not local and the public domain is unknown send the msg
-            else:
-                if down == 1:  # only first time print
-                    print(utils.FAIL + "Fail : " + ip + ": " + name_host + utils.ENDC)
-                    res = send_talent_mail(f"{name_host} doesn't respond!", "", "tommydzepina@gmail.com")
-                    if not res:
-                        print(utils.WARNING + "Mail failed" + utils.ENDC)
-                elif down == TIMER:  # reset the down counter and reopen the while loop with break
-                    down = 0
-                    break
-
-                if get_status(ip):
-                    send_talent_mail(f"{name_host} is AVAILABLE!", "", "tommydzepina@gmail.com")
-                    print(utils.OKGREEN + ip + " Status: is AVAILABLE.")
+        elif not get_whois_status(host):
+                send_talent_mail(f"{name_host} is NOT AVAILABLE!", "", "tommydzepina@gmail.com")
+                print(host + " Status: is not AVAILABLE.")
+        else:
+            info("Name Host : " + host + " with no errors")
 
 
-if len(sys.argv) < 2:  # if you tipe nothing exit
-    print("Need more arguments")
-    exit(1)
-elif len(sys.argv) == 2 and sys.argv[-1] == "-f":  # if third element is empty exit
-    print("the third argument is missing.")
-    exit(11)
-elif len(sys.argv) == 3:  # check right element
-    if sys.argv[1] != "-f":
-        print("the frist argument -f is not correct.")
-    elif sys.argv[2] != FILE_ADDRESSES:
-        print("the third argument is incorrect.")
+if __name__ == '__main__':
+    if len(sys.argv) < 2:  # if you tipe nothing exit
+        print("Need more arguments")
+        exit(1)
+    elif len(sys.argv) == 2:  # if third element is empty exit
+        host_to_check = (sys.argv[1])
+        check_complete_status(host_to_check)
+        exit(11)
+    elif len(sys.argv) == 3:  # check right element
+        if sys.argv[1] != "-f":
+            print("the first is invalid.")
+        else:
+            file = open(sys.argv[2], "r")  # read the files with the name of host
+            lines = file.readlines()
+            file.close()
+            check_complete_status(tuple(lines))
+            exit(0)
     else:
-        file_da_aprire = sys.argv[2]  # if everything is ok ping...
-        broadcast()
-        exit(0)
-
-elif len(sys.argv) == 2:  # ping just one ip
-    indirizzo_da_scandire = sys.argv[1]
-    print("scan this ip...")
-    if is_pingable(indirizzo_da_scandire):
-        send_talent_mail(f"{indirizzo_da_scandire} is pingable!", "", "tommydzepina@gmail.com")
-    else:
-        send_talent_mail(f"{indirizzo_da_scandire} is not pingable!", "", "tommydzepina@gmail.com")
-else:
-    print("Too many arguments")
-    exit(99)
+        print("Too many arguments")
+        exit(99)
