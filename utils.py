@@ -56,6 +56,7 @@ def send_report_mail(body: str, password: str, destination: str):
     msg.set_content(body)
 
     try:
+        # prendo le informazioni da config.json..
         hostname_smtp = get_value_config("HOSTNAME_SMTP")
         port_smtp = int(get_value_config("PORT_SMTP"))
         with smtplib.SMTP(hostname_smtp, port_smtp) as smtp:
