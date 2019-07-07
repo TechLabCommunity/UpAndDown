@@ -2,8 +2,8 @@ import socket
 import sys
 from subprocess import DEVNULL, Popen, PIPE
 from time import sleep, strftime, gmtime
-from utils import get_whois_status, is_pingable
-from utils import send_talent_mail
+from utils import is_pingable, is_avail_whois
+from utils import send_report_mail
 from utils import is_local_address
 from logging import debug, error, info, warning, critical
 import logging
@@ -15,10 +15,8 @@ try:
     info("WHOIS command was found!")
 except FileNotFoundError:
     critical("WHOIS command was not found. You need to install whois command on your distro")
-    exit(2)
+    exit(10)
 
-
-WAITING = 5
 HOSTNAME_DNS = "8.8.8.8"
 HOSTNAME_DNS_PORT = 80
 
@@ -31,33 +29,36 @@ s.close()
 
 def check_complete_status(hostnames: tuple):
     info("Starting scan all ips...")
-    sleep(WAITING)  # waiting some seconds
     mail_body = ""
     for host in hostnames:
 
         host = host.strip()  # delete "\n" and other some shits in the strings
-
+        mail_body += f"\nPer l'hostname {host} : \n\n"
         if not is_pingable(host):
             error(f"{host} is not pingable")
             mail_body += f"{host} is not pingable!\n"
-        if not is_local_address(host):
-            try:
-                name_host = socket.gethostbyname(host)
-                info("Name Host is : " + host + ": " + name_host)
-            except socket.gaierror:  # If you can't ping, hostname won't exist...
-                name_host = host
-                error(f"Name host {name_host} can't be resolved!")
-                mail_body += f"Name host {name_host} can't be resolved!\n"
-                # else, if the host is not local and the public domain is unknown send the msg
-            if not get_whois_status(host):
-                mail_body += f"{name_host} is NOT AVAILABLE!\n"
-                error(host + " Status: is not AVAILABLE.")
+            continue
         else:
-            info("Name Host : " + host + " with no errors")
+            mail_body += f"{host} is pingable!\n"
+        try:
+            name_host = socket.gethostbyname(host)
+            info("Name Host is : " + host + ": " + name_host)
+            mail_body += f"Name host {name_host} resolved :  {name_host}\n"
+        except socket.gaierror:  # If you can't ping, hostname won't exist...
+            name_host = host
+            error(f"Name host {name_host} can't be resolved!")
+            mail_body += f"Name host {name_host} can't be resolved!\n"
+            continue
+            # else, if the host is not local and the public domain is unknown send the msg
+        if is_avail_whois(host):
+            mail_body += f"{name_host} is AVAILABLE!\n"
+            error(host + " Status: is AVAILABLE.")
+        else:
+            mail_body += f"{name_host} is not AVAILABLE!\n"
 
     if mail_body:
         first_part = "Ecco il report del "+strftime("%Y-%m-%d %H:%M:%S", gmtime())+"\n\n"
-        send_talent_mail(first_part+mail_body, "", "tommydzepina@gmail.com")
+        send_report_mail(first_part + mail_body, "", "tommydzepina@gmail.com")
 
 
 if __name__ == '__main__':

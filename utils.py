@@ -21,7 +21,7 @@ def is_pingable(ip_address: str):
 
 
 # function return true if status ok.
-def get_whois_status(domain: str):  # codice nuovo
+def is_avail_whois(domain: str):  # codice nuovo
     process = Popen(["whois", domain], stdout=PIPE, stderr=DEVNULL)
     results, _ = process.communicate()
     results = results.decode("utf-8")  # perchè devo convertire lista di byte in stringa con una certa codifica...
@@ -41,7 +41,7 @@ def is_local_address(local_host_ip: str):
     return ip_castrato == local_host_ip[:12]
 
 
-def send_talent_mail(body: str, password: str, destination: str):
+def send_report_mail(body: str, password: str, destination: str):
     gmail_user = 'alert@talent-lab.it'
     gmail_password = password
     from_addr = gmail_user
