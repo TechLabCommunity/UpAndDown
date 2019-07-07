@@ -20,6 +20,14 @@ def is_pingable(ip_address: str):
     return return_code == 0
 
 
+def nmap(ip_address: str):
+    process = Popen(["nmap", ip_address], stdout=PIPE, stderr=DEVNULL)
+    results, _ = process.communicate()
+    results = results.decode("utf-8")
+    marker = results.find("PORT ")
+    return results[marker:].strip()
+
+
 # function return true if status ok.
 def is_avail_whois(domain: str):  # codice nuovo
     process = Popen(["whois", domain], stdout=PIPE, stderr=DEVNULL)

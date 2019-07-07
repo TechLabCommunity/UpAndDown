@@ -1,9 +1,13 @@
+#!/usr/bin/env python3
+
+
 import socket
 import sys
 from subprocess import DEVNULL, Popen, PIPE
 from time import sleep, strftime, gmtime
 from utils import is_pingable, is_avail_whois
 from utils import send_report_mail
+from utils import nmap
 from utils import is_local_address
 from logging import debug, error, info, warning, critical
 import logging
@@ -55,6 +59,8 @@ def check_complete_status(hostnames: tuple):
             error(host + " Status: is AVAILABLE.")
         else:
             mail_body += f"{name_host} is not AVAILABLE!\n"
+        if nmap(host):
+            mail_body += nmap(host)
 
     if mail_body:
         first_part = "Ecco il report del "+strftime("%Y-%m-%d %H:%M:%S", gmtime())+"\n\n"
