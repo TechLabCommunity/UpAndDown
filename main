@@ -18,7 +18,14 @@ try:
     try_whois = Popen(["whois"], stdout=PIPE, stderr=DEVNULL)
     info("WHOIS command was found!")
 except FileNotFoundError:
-    critical("WHOIS command was not found. You need to install whois command on your distro")
+    critical("WHOIS command was not found. You need to install whois command on your distro.")
+    exit(10)
+
+try:
+    try_nmap = Popen(["nmap"], stdout=PIPE, stderr=DEVNULL)
+    info("NMAP command was found!")
+except FileNotFoundError:
+    critical("NMAP command was not found. You need to install nmap command on your distro.")
     exit(10)
 
 HOSTNAME_DNS = "8.8.8.8"

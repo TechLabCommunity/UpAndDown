@@ -5,6 +5,7 @@ from email.message import EmailMessage
 from datetime import datetime
 import socket
 
+
 HOSTNAME_DNS = "8.8.8.8"
 HOSTNAME_DNS_PORT = 80
 
